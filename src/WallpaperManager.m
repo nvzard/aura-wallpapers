@@ -118,6 +118,7 @@ static NSString * const kSavedHideIconsKey = @"AuraWallpaperHideIcons";
             if (!_isPlaying || _isSleep) {
                 [vc pause];
             }
+            [window orderFront:nil];
         }
     } else {
         [self rebuildWindows];

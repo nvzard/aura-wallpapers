@@ -79,10 +79,50 @@ TEST_CASE(test_wallpaper_loading_and_teardown_lifecycle) {
     [vc cleanupPlayer];
 }
 
+TEST_CASE(test_previews_directory) {
+    NSURL *dir = [WallpaperViewController previewsDirectory];
+    ASSERT_NOT_NULL(dir);
+    ASSERT_TRUE([dir.path containsString:@"AuraWallpaper/Previews"]);
+
+    BOOL isDir = NO;
+    BOOL exists = [[NSFileManager defaultManager] fileExistsAtPath:dir.path isDirectory:&isDir];
+    ASSERT_TRUE(exists);
+    ASSERT_TRUE(isDir);
+}
+
+TEST_CASE(test_rapid_wallpaper_switching_and_handoff) {
+    [WallpaperViewController setDesktopSyncEnabled:NO];
+
+    WallpaperViewController *vc = [[WallpaperViewController alloc] init];
+    (void)vc.view;
+
+    NSURL *url1 = [NSURL fileURLWithPath:@"assets/default_wallpaper.mp4"];
+    NSURL *url2 = [NSURL fileURLWithPath:@"assets/ghibli_landscape_4k.mp4"];
+    ASSERT_TRUE([[NSFileManager defaultManager] fileExistsAtPath:url1.path]);
+    ASSERT_TRUE([[NSFileManager defaultManager] fileExistsAtPath:url2.path]);
+
+    // Simulate user rapidly clicking between wallpapers in the library window
+    for (int i = 0; i < 6; i++) {
+        NSURL *selected = (i % 2 == 0) ? url1 : url2;
+        [vc loadVideoURL:selected forScreen:nil];
+
+        ASSERT_NOT_NULL(vc.player);
+        ASSERT_NOT_NULL(vc.playerView.player);
+        ASSERT_TRUE(vc.playerView.player == vc.player);
+        ASSERT_STRING_EQUAL(vc.currentURL.path, selected.path);
+    }
+
+    [vc cleanupPlayer];
+    ASSERT_NULL(vc.player);
+    ASSERT_NULL(vc.playerView.player);
+}
+
 void run_wallpaper_view_controller_tests(void) {
     TEST_SUITE_BEGIN("WallpaperViewController Unit Tests");
     RUN_TEST(test_wallpaper_view_controller_initial_state);
     RUN_TEST(test_desktop_sync_safety_switch);
     RUN_TEST(test_wallpaper_loading_and_teardown_lifecycle);
+    RUN_TEST(test_previews_directory);
+    RUN_TEST(test_rapid_wallpaper_switching_and_handoff);
     TEST_SUITE_END();
 }

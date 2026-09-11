@@ -81,6 +81,7 @@ final class WallpaperManager {
                     if !isPlaying || isSleep {
                         vc.pause()
                     }
+                    window.orderFront(nil)
                 }
             }
         } else {

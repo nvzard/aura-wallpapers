@@ -20,5 +20,6 @@
 
 + (void)setDesktopSyncEnabled:(BOOL)enabled;
 + (BOOL)isDesktopSyncEnabled;
++ (NSURL *)previewsDirectory;
 
 @end
