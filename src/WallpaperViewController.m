@@ -6,7 +6,20 @@
 }
 @end
 
+static BOOL sDesktopSyncEnabled = YES;
+
 @implementation WallpaperViewController
+
++ (void)setDesktopSyncEnabled:(BOOL)enabled {
+    sDesktopSyncEnabled = enabled;
+}
+
++ (BOOL)isDesktopSyncEnabled {
+    if (getenv("AURA_TEST_MODE") != NULL) {
+        return NO;
+    }
+    return sDesktopSyncEnabled;
+}
 
 - (instancetype)init {
     self = [super init];
@@ -83,6 +96,9 @@
 }
 
 - (void)syncFirstFrameToDesktop:(AVAsset *)asset forScreen:(NSScreen *)screen {
+    if (![WallpaperViewController isDesktopSyncEnabled]) {
+        return;
+    }
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
         AVAssetImageGenerator *generator = [[AVAssetImageGenerator alloc] initWithAsset:asset];
         generator.appliesPreferredTrackTransform = YES;

@@ -6,5 +6,6 @@
 
 - (void)showLibrary;
 - (void)reloadWallpapers;
++ (NSString *)prettifiedTitleForFilename:(NSString *)fileName;
 
 @end

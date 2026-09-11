@@ -7,6 +7,9 @@ Lightweight macOS status-bar dynamic wallpaper engine (`LSUIElement`) playing se
 ## ⚡ Essential Commands
 
 ```bash
+# Run automated test suite (Unit & Integration tests + Swift parity check)
+./test.sh
+
 # Build app bundle (AuraWallpaper.app)
 ./build.sh
 
@@ -28,8 +31,10 @@ pgrep -l AuraWallpaper
 | :--- | :--- |
 | `src/` | **Primary active codebase** (Objective-C/Cocoa ARC). Compiled by `build.sh` via `clang`. |
 | `swift_src/` | **Pure Swift 1:1 mirror**. Must be kept in architectural and feature parity with `src/`. |
+| `tests/` | **Automated test suite**. Modular unit and integration tests executed by `test.sh`. |
 | `assets/` | Bundle configuration (`Info.plist`) and bundled video (`default_wallpaper.mp4`). |
 | `build.sh` | Shell build script compiling `src/*.m`, linking frameworks, copying assets, and ad-hoc codesigning. |
+| `test.sh` | Automated test runner script compiling `tests/*.m`, running assertions, and validating Swift mirror parity. |
 
 ### Component Hierarchy
 

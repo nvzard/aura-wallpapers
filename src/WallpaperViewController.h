@@ -16,5 +16,9 @@
 - (BOOL)isPlaying;
 - (void)setMuted:(BOOL)muted;
 - (void)setVolume:(float)volume;
+- (void)cleanupPlayer;
+
++ (void)setDesktopSyncEnabled:(BOOL)enabled;
++ (BOOL)isDesktopSyncEnabled;
 
 @end

@@ -282,6 +282,10 @@ private final class WallpaperLibraryHeaderView: NSView {
 final class WallpaperLibraryWindowController: NSWindowController, NSWindowDelegate {
     static let shared = WallpaperLibraryWindowController()
 
+    static func prettifiedTitle(for fileName: String) -> String {
+        return PrettifyWallpaperTitle(fileName)
+    }
+
     private var visualEffectView: NSVisualEffectView!
     private var scrollView: NSScrollView!
     private var gridView: WallpaperGridView!

@@ -34,6 +34,12 @@ Run the build script to compile and generate `AuraWallpaper.app`:
 open AuraWallpaper.app
 ```
 
+### Run Automated Tests
+Run the comprehensive native unit/integration test suite and Swift parity checks:
+```bash
+./test.sh
+```
+
 ### Install to Applications (Optional)
 ```bash
 cp -R AuraWallpaper.app /Applications/
@@ -60,24 +66,35 @@ live-wallpapers-mac/
 ├── ANALYSIS.md                        # Reverse engineering analysis document
 ├── README.md                          # Project documentation
 ├── build.sh                           # Native compiler script
+├── test.sh                            # Automated test runner & parity checker
 ├── AuraWallpaper.app/                 # Compiled standalone macOS application
 ├── assets/
 │   ├── Info.plist                     # App bundle configuration
 │   └── default_wallpaper.mp4          # Default bundled starter video
+├── tests/                             # Automated native test suite
+│   ├── test_framework.h               # Assertion harness & test runner
+│   ├── test_main.m                    # Main test orchestrator
+│   ├── test_wallpaper_manager.m       # WallpaperManager unit tests
+│   ├── test_wallpaper_window.m        # WallpaperWindow & click-through tests
+│   ├── test_wallpaper_view_controller.m # Player lifecycle & safety tests
+│   ├── test_library_controller.m      # Library UI & title formatting tests
+│   └── test_assets_and_bundle.m       # Media assets & Info.plist validation
 ├── src/                               # Native Objective-C / Cocoa engine
 │   ├── main.m                         # Application entrypoint
 │   ├── AppDelegate.h / .m             # Menu bar status item & actions
 │   ├── WallpaperManager.h / .m        # Multi-screen & power orchestrator
 │   ├── WallpaperWindow.h / .m         # Borderless transparent desktop-level window
 │   ├── WallpaperViewController.h / .m # AVPlayerLooper hardware playback controller
-│   └── ClickThroughPlayerView.h / .m  # AVPlayerView hitTest passthrough
+│   ├── ClickThroughPlayerView.h / .m  # AVPlayerView hitTest passthrough
+│   └── WallpaperLibraryWindowController.h / .m # Library gallery controller
 └── swift_src/                         # Pure Swift equivalent implementation
     ├── main.swift
     ├── AppDelegate.swift
     ├── WallpaperManager.swift
     ├── WallpaperWindow.swift
     ├── WallpaperViewController.swift
-    └── ClickThroughPlayerView.swift
+    ├── ClickThroughPlayerView.swift
+    └── WallpaperLibraryWindowController.swift
 ```
 
 ---

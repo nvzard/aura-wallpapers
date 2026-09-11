@@ -361,6 +361,10 @@ static NSString *PrettifyWallpaperTitle(NSString *fileName) {
     return instance;
 }
 
++ (NSString *)prettifiedTitleForFilename:(NSString *)fileName {
+    return PrettifyWallpaperTitle(fileName);
+}
+
 - (instancetype)init {
     NSRect frame = NSMakeRect(0, 0, 780, 520);
     NSWindowStyleMask style = NSWindowStyleMaskTitled |

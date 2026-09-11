@@ -3,6 +3,14 @@ import AVFoundation
 
 /// View controller managing hardware-accelerated video playback and seamless looping
 final class WallpaperViewController: NSViewController {
+    static var desktopSyncEnabled: Bool = true
+    static var isDesktopSyncEnabled: Bool {
+        if ProcessInfo.processInfo.environment["AURA_TEST_MODE"] != nil {
+            return false
+        }
+        return desktopSyncEnabled
+    }
+
     let playerView = ClickThroughPlayerView()
     private(set) var player: AVQueuePlayer?
     private var playerLooper: AVPlayerLooper?
@@ -79,6 +87,7 @@ final class WallpaperViewController: NSViewController {
     var isPlaying: Bool { (player?.rate ?? 0.0) > 0.0 }
 
     private func syncFirstFrame(asset: AVAsset, for screen: NSScreen) {
+        guard Self.isDesktopSyncEnabled else { return }
         DispatchQueue.global(qos: .background).async {
             let generator = AVAssetImageGenerator(asset: asset)
             generator.appliesPreferredTrackTransform = true

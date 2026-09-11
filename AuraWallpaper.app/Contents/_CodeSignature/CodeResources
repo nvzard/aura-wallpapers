@@ -12,10 +12,6 @@
 		<data>
 		usPMSkYMHzp2CV9umL5Wvdoq/p4=
 		</data>
-		<key>Resources/shrine_of_depths_4k.mp4</key>
-		<data>
-		SCt6DozzYs1l5hOAbDWEbYrNO/A=
-		</data>
 	</dict>
 	<key>files2</key>
 	<dict>
@@ -30,7 +26,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			F/7hCdndzz9vugvAY99uGGaHGd5LFOjRGMSRdAMtHf8=
+			F6oeyNpf1TUxH3CEb9hX2bZfgJiDXohegCB9BpDJV0I=
 			</data>
 		</dict>
 		<key>MacOS/AuraWallpaper.dSYM/Contents/Resources/Relocations/aarch64/AuraWallpaper.yml</key>
@@ -52,13 +48,6 @@
 			<key>hash2</key>
 			<data>
 			xfL7xTZcpb/SvF4RkGjMdzVKXhJpkEU0eD6EbXFIxmw=
-			</data>
-		</dict>
-		<key>Resources/shrine_of_depths_4k.mp4</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			fpHUXEuDeOJ/bG64E0xw3eC/dcD+GF8cVfaa1lJVTSQ=
 			</data>
 		</dict>
 	</dict>
