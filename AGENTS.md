@@ -50,7 +50,7 @@ pgrep -l AuraWallpaper
 3. **`WallpaperWindow`** (`src/WallpaperWindow.m`, `swift_src/WallpaperWindow.swift`)
    - Borderless, transparent, non-activating window per `NSScreen`.
    - Normal level: `CGWindowLevelForKey(kCGDesktopWindowLevelKey)` (behind Finder icons).
-   - Hide icons level: `CGWindowLevelForKey(kCGOverlayWindowLevelKey) + 1` (covers Finder icons).
+   - Hide icons level: `CGWindowLevelForKey(kCGNormalWindowLevelKey) - 1` (covers Finder icons and underbelly without menu bar flicker).
    - Settings: `canBecomeKeyWindow = NO`, `canBecomeMainWindow = NO`, `releasedWhenClosed = NO`, `ignoresMouseEvents = YES`.
    - Behavior: `NSWindowCollectionBehaviorCanJoinAllSpaces | NSWindowCollectionBehaviorStationary | NSWindowCollectionBehaviorIgnoresCycle`.
 4. **`WallpaperViewController`** (`src/WallpaperViewController.m`, `swift_src/WallpaperViewController.swift`)

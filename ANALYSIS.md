@@ -82,7 +82,7 @@ macOS organizes windows into hierarchical layers defined by `CGWindowLevelForKey
 ```assembly
 ## From WallpaperWindowController hiddenDesktopIcon:
 movq    $-0x7fffffe7, %rax    ## 0x80000019 = -2147483623 (kCGDesktopWindowLevelKey)
-movq    $-0x7fffffd2, %rcx    ## 0x8000002E = -2147483602 (kCGOverlayWindowLevelKey + 1)
+movq    $-0x7fffffd2, %rcx    ## 0x8000002E = -2147483602 (kCGDesktopIconWindowLevelKey + 1)
 movq    0x31d69(%rip), %rsi   ## -[NSWindow setLevel:]
 ```
 
@@ -91,7 +91,7 @@ movq    0x31d69(%rip), %rsi   ## -[NSWindow setLevel:]
 | Mode | Window Level Key | Level Value | Layer Behavior |
 | :--- | :--- | :--- | :--- |
 | **Standard Mode** | `kCGDesktopWindowLevelKey` | `-2147483623` (`0x80000019`) | Sits behind desktop icons and Finder widgets. Icons remain visible and usable. |
-| **Hide Icons Mode** | `kCGOverlayWindowLevelKey + 1` | `-2147483602` (`0x8000002E`) | Sits *above* the desktop icon layer. Visually covers all desktop files and folders. |
+| **Hide Icons Mode** | `kCGNormalWindowLevelKey - 1` | `-1` (`0xFFFFFFFF`) | Sits *above* desktop icons and WindowServer `underbelly` (-2147483602), strictly below normal applications (0). Eliminates menu bar fade flickering. |
 | **Screensaver Mode**| `kCGPopUpMenuWindowLevelKey` | `1000` (`0x000003E8`) | Sits above all normal applications, filling the screen. |
 
 ### 3.2 Collection Behavior: Space & Mission Control Persistence

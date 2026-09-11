@@ -40,14 +40,42 @@ TEST_CASE(test_wallpaper_window_level_switching) {
     // Default: Behind desktop icons
     ASSERT_EQUAL(window.level, CGWindowLevelForKey(kCGDesktopWindowLevelKey));
 
-    // Hide desktop icons mode: elevate above desktop overlay
+    // Hide desktop icons mode: elevate above desktop layers (-1)
     [window setHidesDesktopIcons:YES];
     ASSERT_TRUE(window.hidesDesktopIcons);
-    ASSERT_EQUAL(window.level, (NSInteger)(CGWindowLevelForKey(kCGOverlayWindowLevelKey) + 1));
+    ASSERT_EQUAL(window.level, (NSInteger)(CGWindowLevelForKey(kCGNormalWindowLevelKey) - 1));
+    // Verify it is strictly below normal application window layer (0)
+    ASSERT_TRUE(window.level < CGWindowLevelForKey(kCGNormalWindowLevelKey));
 
-    // Return to behind desktop icons
+    // Return to behind desktop icons (-2147483623)
     [window setHidesDesktopIcons:NO];
     ASSERT_FALSE(window.hidesDesktopIcons);
+    ASSERT_EQUAL(window.level, CGWindowLevelForKey(kCGDesktopWindowLevelKey));
+
+    [window close];
+}
+
+TEST_CASE(test_wallpaper_window_safety_guard) {
+    NSScreen *screen = [NSScreen mainScreen];
+    ASSERT_NOT_NULL(screen);
+
+    WallpaperWindow *window = [[WallpaperWindow alloc] initWithScreen:screen];
+    ASSERT_NOT_NULL(window);
+
+    // Initial safe level
+    ASSERT_EQUAL(window.level, CGWindowLevelForKey(kCGDesktopWindowLevelKey));
+
+    // Attempt to set unsafe levels (e.g. kCGOverlayWindowLevelKey or kCGNormalWindowLevelKey)
+    window.level = CGWindowLevelForKey(kCGOverlayWindowLevelKey) + 1;
+    // Safety guard must reject and revert to kCGDesktopWindowLevelKey
+    ASSERT_EQUAL(window.level, CGWindowLevelForKey(kCGDesktopWindowLevelKey));
+
+    window.level = CGWindowLevelForKey(kCGNormalWindowLevelKey);
+    // Safety guard must reject normal window level
+    ASSERT_EQUAL(window.level, CGWindowLevelForKey(kCGDesktopWindowLevelKey));
+
+    window.level = CGWindowLevelForKey(kCGFloatingWindowLevelKey);
+    // Safety guard must reject floating window level
     ASSERT_EQUAL(window.level, CGWindowLevelForKey(kCGDesktopWindowLevelKey));
 
     [window close];
@@ -68,6 +96,7 @@ void run_wallpaper_window_tests(void) {
     TEST_SUITE_BEGIN("WallpaperWindow & ClickThroughPlayerView Unit Tests");
     RUN_TEST(test_wallpaper_window_initialization);
     RUN_TEST(test_wallpaper_window_level_switching);
+    RUN_TEST(test_wallpaper_window_safety_guard);
     RUN_TEST(test_click_through_player_view);
     TEST_SUITE_END();
 }

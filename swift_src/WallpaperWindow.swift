@@ -41,13 +41,28 @@ final class WallpaperWindow: NSWindow {
         }
     }
 
+    override var level: NSWindow.Level {
+        get { super.level }
+        set {
+            // Safety guard: Live wallpaper must NEVER be elevated to or above normal application window level (0).
+            // An elevated level would cover user windows and render macOS completely unusable.
+            if newValue.rawValue >= Int(CGWindowLevelForKey(.normalWindow)) {
+                NSLog("[WallpaperWindow] ERROR: Refusing unsafe window level %ld (must be below normal window level 0)", newValue.rawValue)
+                super.level = NSWindow.Level(Int(CGWindowLevelForKey(.desktopWindow)))
+            } else {
+                super.level = newValue
+            }
+        }
+    }
+
     func setHidesDesktopIcons(_ hide: Bool) {
         self.hidesDesktopIcons = hide
         if hide {
-            // Elevate above desktop icons layer: -2147483602
-            self.level = NSWindow.Level(Int(CGWindowLevelForKey(.overlayWindow) + 1))
+            // Elevate above desktop icons (-2147483603) and WindowServer underbelly (-2147483602) layers (-1),
+            // strictly below normal application windows (0) to eliminate menu bar fade flickering.
+            self.level = NSWindow.Level(Int(CGWindowLevelForKey(.normalWindow)) - 1)
         } else {
-            // Return behind desktop icons
+            // Return behind desktop icons: -2147483623
             self.level = NSWindow.Level(Int(CGWindowLevelForKey(.desktopWindow)))
         }
     }
