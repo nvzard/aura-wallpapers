@@ -8,6 +8,14 @@
 		<data>
 		SCt6DozzYs1l5hOAbDWEbYrNO/A=
 		</data>
+		<key>Resources/ghibli_landscape_4k.mp4</key>
+		<data>
+		usPMSkYMHzp2CV9umL5Wvdoq/p4=
+		</data>
+		<key>Resources/shrine_of_depths_4k.mp4</key>
+		<data>
+		SCt6DozzYs1l5hOAbDWEbYrNO/A=
+		</data>
 	</dict>
 	<key>files2</key>
 	<dict>
@@ -22,7 +30,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			EuiAs7nXciUGEK/GzRRk4s4+4EmqiMXq1BoKs/d+/ow=
+			F/7hCdndzz9vugvAY99uGGaHGd5LFOjRGMSRdAMtHf8=
 			</data>
 		</dict>
 		<key>MacOS/AuraWallpaper.dSYM/Contents/Resources/Relocations/aarch64/AuraWallpaper.yml</key>
@@ -33,6 +41,20 @@
 			</data>
 		</dict>
 		<key>Resources/default_wallpaper.mp4</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			fpHUXEuDeOJ/bG64E0xw3eC/dcD+GF8cVfaa1lJVTSQ=
+			</data>
+		</dict>
+		<key>Resources/ghibli_landscape_4k.mp4</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			xfL7xTZcpb/SvF4RkGjMdzVKXhJpkEU0eD6EbXFIxmw=
+			</data>
+		</dict>
+		<key>Resources/shrine_of_depths_4k.mp4</key>
 		<dict>
 			<key>hash2</key>
 			<data>

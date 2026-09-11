@@ -86,6 +86,8 @@ final class WallpaperManager {
         } else {
             rebuildWindows()
         }
+
+        NotificationCenter.default.post(name: WallpaperManager.didChangeWallpaperNotification, object: self, userInfo: ["url": url])
     }
 
     func rebuildWindows() {
@@ -136,5 +138,107 @@ final class WallpaperManager {
         self.hidesDesktopIcons = hide
         UserDefaults.standard.set(hide, forKey: kSavedHideIcons)
         windows.forEach { $0.setHidesDesktopIcons(hide) }
+    }
+
+    // MARK: - Wallpaper Library Helpers
+
+    static let didChangeWallpaperNotification = Notification.Name("AuraWallpaperDidChangeNotification")
+
+    static var userWallpapersDirectory: URL {
+        let fm = FileManager.default
+        let appSupport = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let dir = appSupport.appendingPathComponent("AuraWallpaper/Wallpapers", isDirectory: true)
+        if !fm.fileExists(atPath: dir.path) {
+            try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        }
+        return dir
+    }
+
+    static func allAvailableWallpapers() -> [URL] {
+        var results: [URL] = []
+        var seenFileNames = Set<String>()
+        let fm = FileManager.default
+        let validExtensions = ["mp4", "mov", "m4v", "webm"]
+
+        // 1. Bundled in Resources
+        if let bundleResURL = Bundle.main.resourceURL,
+           let contents = try? fm.contentsOfDirectory(at: bundleResURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles) {
+            for fileURL in contents {
+                let ext = fileURL.pathExtension.lowercased()
+                let name = fileURL.lastPathComponent.lowercased()
+                if validExtensions.contains(ext) && !seenFileNames.contains(name) {
+                    seenFileNames.insert(name)
+                    results.append(fileURL)
+                }
+            }
+        }
+
+        // Fallback for CLI testing outside of bundle
+        if results.isEmpty {
+            let devAssetsPath = "assets"
+            if fm.fileExists(atPath: devAssetsPath),
+               let files = try? fm.contentsOfDirectory(atPath: devAssetsPath) {
+                for file in files {
+                    let ext = (file as NSString).pathExtension.lowercased()
+                    let name = file.lowercased()
+                    if validExtensions.contains(ext) && !seenFileNames.contains(name) {
+                        let u = URL(fileURLWithPath: (devAssetsPath as NSString).appendingPathComponent(file)).standardized
+                        seenFileNames.insert(name)
+                        results.append(u)
+                    }
+                }
+            }
+        }
+
+        // 2. User library wallpapers
+        let userDir = userWallpapersDirectory
+        if let userFiles = try? fm.contentsOfDirectory(at: userDir, includingPropertiesForKeys: nil, options: .skipsHiddenFiles) {
+            for fileURL in userFiles {
+                let ext = fileURL.pathExtension.lowercased()
+                let name = fileURL.lastPathComponent.lowercased()
+                if validExtensions.contains(ext) && !seenFileNames.contains(name) {
+                    seenFileNames.insert(name)
+                    results.append(fileURL)
+                }
+            }
+        }
+
+        // 3. Current active wallpaper if not already present
+        if let current = shared.currentVideoURL, fm.fileExists(atPath: current.path) {
+            let name = current.lastPathComponent.lowercased()
+            if !seenFileNames.contains(name) {
+                seenFileNames.insert(name)
+                results.append(current)
+            }
+        }
+
+        return results.sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
+    }
+
+    @discardableResult
+    static func importWallpaper(at sourceURL: URL) throws -> URL {
+        let fm = FileManager.default
+        let targetDir = userWallpapersDirectory
+        let baseName = sourceURL.deletingPathExtension().lastPathComponent
+        let ext = sourceURL.pathExtension
+
+        var destURL = targetDir.appendingPathComponent(sourceURL.lastPathComponent)
+        var counter = 1
+        while fm.fileExists(atPath: destURL.path) {
+            let newName = "\(baseName)_\(counter).\(ext)"
+            destURL = targetDir.appendingPathComponent(newName)
+            counter += 1
+        }
+
+        try fm.copyItem(at: sourceURL, to: destURL)
+        return destURL
+    }
+
+    static func deleteUserWallpaper(at wallpaperURL: URL) throws {
+        let userDir = userWallpapersDirectory
+        guard wallpaperURL.path.hasPrefix(userDir.path) else {
+            throw NSError(domain: "AuraWallpaper", code: -1, userInfo: [NSLocalizedDescriptionKey: "Cannot delete bundled wallpaper."])
+        }
+        try FileManager.default.removeItem(at: wallpaperURL)
     }
 }

@@ -25,6 +25,7 @@ SOURCES=(
     src/WallpaperWindow.m
     src/WallpaperViewController.m
     src/ClickThroughPlayerView.m
+    src/WallpaperLibraryWindowController.m
 )
 
 FRAMEWORKS=(
@@ -45,10 +46,12 @@ clang -fobjc-arc -O3 -g -Wall \
 # 3. Copy Plist & Resources
 cp assets/Info.plist "$CONTENTS_DIR/Info.plist"
 
-if [ -f "assets/default_wallpaper.mp4" ]; then
-    echo "📦 Bundling default video wallpaper..."
-    cp -c assets/default_wallpaper.mp4 "$RESOURCES_DIR/default_wallpaper.mp4" 2>/dev/null || cp assets/default_wallpaper.mp4 "$RESOURCES_DIR/default_wallpaper.mp4"
-fi
+echo "📦 Bundling video wallpapers..."
+for f in assets/*.mp4 assets/*.mov assets/*.m4v; do
+    if [ -f "$f" ]; then
+        cp -c "$f" "$RESOURCES_DIR/" 2>/dev/null || cp "$f" "$RESOURCES_DIR/"
+    fi
+done
 
 # 4. Ad-hoc codesign
 echo "🔏 Signing application bundle..."

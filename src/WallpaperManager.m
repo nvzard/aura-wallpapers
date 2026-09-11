@@ -1,5 +1,7 @@
 #import "WallpaperManager.h"
 
+NSString * const AuraWallpaperDidChangeNotification = @"AuraWallpaperDidChangeNotification";
+
 static NSString * const kSavedWallpaperPathKey = @"AuraWallpaperSavedPath";
 static NSString * const kSavedMutedKey = @"AuraWallpaperMuted";
 static NSString * const kSavedVolumeKey = @"AuraWallpaperVolume";
@@ -120,6 +122,10 @@ static NSString * const kSavedHideIconsKey = @"AuraWallpaperHideIcons";
     } else {
         [self rebuildWindows];
     }
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:AuraWallpaperDidChangeNotification
+                                                        object:self
+                                                      userInfo:@{@"url": url}];
 }
 
 - (void)rebuildWindows {
@@ -242,6 +248,126 @@ static NSString * const kSavedHideIconsKey = @"AuraWallpaperHideIcons";
     for (WallpaperWindow *w in _windows) {
         [w updateFrameForScreen];
     }
+}
+
+#pragma mark - Wallpaper Library Helpers
+
++ (NSURL *)userWallpapersDirectory {
+    NSFileManager *fm = [NSFileManager defaultManager];
+    NSURL *appSupport = [fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject;
+    NSURL *dir = [appSupport URLByAppendingPathComponent:@"AuraWallpaper/Wallpapers" isDirectory:YES];
+    if (![fm fileExistsAtPath:dir.path]) {
+        [fm createDirectoryAtURL:dir withIntermediateDirectories:YES attributes:nil error:NULL];
+    }
+    return dir;
+}
+
++ (NSArray<NSURL *> *)allAvailableWallpapers {
+    NSMutableArray<NSURL *> *results = [NSMutableArray array];
+    NSMutableSet<NSString *> *seenFileNames = [NSMutableSet set];
+    NSFileManager *fm = [NSFileManager defaultManager];
+    NSArray<NSString *> *validExtensions = @[@"mp4", @"mov", @"m4v", @"webm"];
+
+    // 1. Bundled wallpapers in Resources
+    NSURL *bundleResURL = [[NSBundle mainBundle] resourceURL];
+    if (bundleResURL) {
+        NSArray<NSURL *> *contents = [fm contentsOfDirectoryAtURL:bundleResURL
+                                       includingPropertiesForKeys:nil
+                                                          options:NSDirectoryEnumerationSkipsHiddenFiles
+                                                            error:NULL];
+        for (NSURL *fileURL in contents) {
+            NSString *ext = fileURL.pathExtension.lowercaseString;
+            NSString *name = fileURL.lastPathComponent.lowercaseString;
+            if ([validExtensions containsObject:ext] && ![seenFileNames containsObject:name]) {
+                [seenFileNames addObject:name];
+                [results addObject:fileURL];
+            }
+        }
+    }
+
+    // Fallback if running outside of an .app bundle (e.g. CLI tool tests)
+    if (results.count == 0) {
+        NSString *devAssetsPath = @"assets";
+        if ([fm fileExistsAtPath:devAssetsPath]) {
+            NSArray<NSString *> *files = [fm contentsOfDirectoryAtPath:devAssetsPath error:NULL];
+            for (NSString *file in files) {
+                NSString *ext = file.pathExtension.lowercaseString;
+                NSString *name = file.lowercaseString;
+                if ([validExtensions containsObject:ext] && ![seenFileNames containsObject:name]) {
+                    NSString *full = [devAssetsPath stringByAppendingPathComponent:file];
+                    [seenFileNames addObject:name];
+                    [results addObject:[NSURL fileURLWithPath:[full stringByStandardizingPath]]];
+                }
+            }
+        }
+    }
+
+    // 2. User library wallpapers
+    NSURL *userDir = [self userWallpapersDirectory];
+    NSArray<NSURL *> *userFiles = [fm contentsOfDirectoryAtURL:userDir
+                                    includingPropertiesForKeys:nil
+                                                       options:NSDirectoryEnumerationSkipsHiddenFiles
+                                                         error:NULL];
+    for (NSURL *fileURL in userFiles) {
+        NSString *ext = fileURL.pathExtension.lowercaseString;
+        NSString *name = fileURL.lastPathComponent.lowercaseString;
+        if ([validExtensions containsObject:ext] && ![seenFileNames containsObject:name]) {
+            [seenFileNames addObject:name];
+            [results addObject:fileURL];
+        }
+    }
+
+    // 3. Current active wallpaper if not yet in list
+    NSURL *current = [WallpaperManager sharedManager].currentVideoURL;
+    if (current && [fm fileExistsAtPath:current.path]) {
+        NSString *name = current.lastPathComponent.lowercaseString;
+        if (![seenFileNames containsObject:name]) {
+            [seenFileNames addObject:name];
+            [results addObject:current];
+        }
+    }
+
+    // Sort alphabetically by lastPathComponent
+    [results sortUsingComparator:^NSComparisonResult(NSURL *url1, NSURL *url2) {
+        return [url1.lastPathComponent localizedStandardCompare:url2.lastPathComponent];
+    }];
+
+    return results;
+}
+
++ (NSURL *)importWallpaperAtURL:(NSURL *)sourceURL error:(NSError **)outError {
+    if (!sourceURL || ![sourceURL isFileURL]) return nil;
+    NSFileManager *fm = [NSFileManager defaultManager];
+    NSURL *targetDir = [self userWallpapersDirectory];
+    NSString *baseName = sourceURL.lastPathComponent.stringByDeletingPathExtension;
+    NSString *extension = sourceURL.pathExtension;
+
+    NSURL *destURL = [targetDir URLByAppendingPathComponent:sourceURL.lastPathComponent];
+    NSUInteger counter = 1;
+    while ([fm fileExistsAtPath:destURL.path]) {
+        NSString *newName = [NSString stringWithFormat:@"%@_%lu.%@", baseName, (unsigned long)counter, extension];
+        destURL = [targetDir URLByAppendingPathComponent:newName];
+        counter++;
+    }
+
+    BOOL ok = [fm copyItemAtURL:sourceURL toURL:destURL error:outError];
+    return ok ? destURL : nil;
+}
+
++ (BOOL)deleteUserWallpaperAtURL:(NSURL *)wallpaperURL error:(NSError **)outError {
+    if (!wallpaperURL) return NO;
+    NSURL *userDir = [self userWallpapersDirectory];
+    if (![wallpaperURL.path hasPrefix:userDir.path]) {
+        if (outError) {
+            *outError = [NSError errorWithDomain:@"AuraWallpaper"
+                                            code:-1
+                                        userInfo:@{NSLocalizedDescriptionKey: @"Cannot delete bundled wallpaper."}];
+        }
+        return NO;
+    }
+
+    NSFileManager *fm = [NSFileManager defaultManager];
+    return [fm removeItemAtURL:wallpaperURL error:outError];
 }
 
 @end

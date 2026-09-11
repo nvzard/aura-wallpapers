@@ -35,12 +35,13 @@ pgrep -l AuraWallpaper
 
 1. **`AppDelegate`** (`src/AppDelegate.m`, `swift_src/AppDelegate.swift`)
    - Manages status item (`sparkles.tv`) and menu.
-   - Controls: Choose Video, Pause/Resume, Mute/Unmute, Hide Desktop Icons, Open at Login (`SMAppService`).
+   - Controls: Open Wallpaper Library, Pause/Resume, Mute/Unmute, Hide Desktop Icons, Open at Login (`SMAppService`).
 2. **`WallpaperManager`** (`src/WallpaperManager.m`, `swift_src/WallpaperManager.swift`)
    - Central singleton orchestrator.
    - Observes display topology changes (`NSApplicationDidChangeScreenParametersNotification`).
    - Observes power/sleep notifications (`NSWorkspaceScreensDidSleepNotification`, `NSWorkspaceWillSleepNotification`, wake events) to pause/resume playback.
    - Manages window lifecycle; reuses existing screen windows on wallpaper change to avoid flicker.
+   - Scans available wallpapers (bundled + user application support) and handles import/delete.
 3. **`WallpaperWindow`** (`src/WallpaperWindow.m`, `swift_src/WallpaperWindow.swift`)
    - Borderless, transparent, non-activating window per `NSScreen`.
    - Normal level: `CGWindowLevelForKey(kCGDesktopWindowLevelKey)` (behind Finder icons).
@@ -52,6 +53,10 @@ pgrep -l AuraWallpaper
    - Extracts first video frame and syncs with `NSWorkspace.sharedWorkspace.setDesktopImageURL` to eliminate black flashes on wake/space-switch.
 5. **`ClickThroughPlayerView`** (`src/ClickThroughPlayerView.m`, `swift_src/ClickThroughPlayerView.swift`)
    - Subclass of `AVPlayerView` overriding `hitTest:` to return `nil`, passing clicks to Finder.
+6. **`WallpaperLibraryWindowController`** (`src/WallpaperLibraryWindowController.m`, `swift_src/WallpaperLibraryWindowController.swift`)
+   - Responsive visual gallery window featuring frosted backdrop (`NSVisualEffectView`).
+   - Displays 16:9 async video thumbnails with active checkmarks and hover effects.
+   - Immediate click-to-apply switching and "+ Add Wallpaper..." local file importer.
 
 ---
 

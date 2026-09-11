@@ -31,9 +31,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(currentFileItem)
         menu.addItem(NSMenuItem.separator())
 
-        let chooseItem = NSMenuItem(title: "Choose Video Wallpaper...", action: #selector(chooseVideoAction), keyEquivalent: "o")
-        chooseItem.target = self
-        menu.addItem(chooseItem)
+        let libraryItem = NSMenuItem(title: "Open Wallpaper Library...", action: #selector(openWallpaperLibraryAction), keyEquivalent: "l")
+        libraryItem.target = self
+        menu.addItem(libraryItem)
 
         playPauseItem = NSMenuItem(title: "Pause Wallpaper", action: #selector(togglePlayPauseAction), keyEquivalent: "p")
         playPauseItem.target = self
@@ -49,7 +49,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         hideIconsItem.target = self
         menu.addItem(hideIconsItem)
 
-        openAtLoginItem = NSMenuItem(title: "Open at Login", action: #selector(toggleOpenAtLoginAction), keyEquivalent: "l")
+        openAtLoginItem = NSMenuItem(title: "Open at Login", action: #selector(toggleOpenAtLoginAction), keyEquivalent: "")
         openAtLoginItem.target = self
         menu.addItem(openAtLoginItem)
 
@@ -109,22 +109,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         openAtLoginItem.state = isOpenAtLoginEnabled ? .on : .off
     }
 
-    @objc private func chooseVideoAction() {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = false
-        panel.allowedContentTypes = [.movie, .mpeg4Movie, .quickTimeMovie]
-        panel.message = "Select a high-definition video wallpaper:"
-
-        NSApp.activate(ignoringOtherApps: true)
-        panel.begin { response in
-            if response == .OK, let url = panel.url {
-                DispatchQueue.main.async {
-                    WallpaperManager.shared.setWallpaper(url: url)
-                }
-            }
-        }
+    @objc private func openWallpaperLibraryAction() {
+        WallpaperLibraryWindowController.shared.showLibrary()
     }
 
     @objc private func togglePlayPauseAction() {

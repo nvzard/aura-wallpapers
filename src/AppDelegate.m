@@ -1,5 +1,6 @@
 #import "AppDelegate.h"
 #import "WallpaperManager.h"
+#import "WallpaperLibraryWindowController.h"
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import <ServiceManagement/ServiceManagement.h>
 
@@ -41,11 +42,11 @@
     [menu addItem:_currentFileItem];
     [menu addItem:[NSMenuItem separatorItem]];
 
-    NSMenuItem *chooseItem = [[NSMenuItem alloc] initWithTitle:@"Choose Video Wallpaper..."
-                                                        action:@selector(chooseVideoAction:)
-                                                 keyEquivalent:@"o"];
-    chooseItem.target = self;
-    [menu addItem:chooseItem];
+    NSMenuItem *libraryItem = [[NSMenuItem alloc] initWithTitle:@"Open Wallpaper Library..."
+                                                          action:@selector(openWallpaperLibraryAction:)
+                                                   keyEquivalent:@"l"];
+    libraryItem.target = self;
+    [menu addItem:libraryItem];
 
     _playPauseItem = [[NSMenuItem alloc] initWithTitle:@"Pause Wallpaper"
                                                 action:@selector(togglePlayPauseAction:)
@@ -69,7 +70,7 @@
 
     _openAtLoginItem = [[NSMenuItem alloc] initWithTitle:@"Open at Login"
                                                   action:@selector(toggleOpenAtLoginAction:)
-                                           keyEquivalent:@"l"];
+                                           keyEquivalent:@""];
     _openAtLoginItem.target = self;
     [menu addItem:_openAtLoginItem];
 
@@ -139,30 +140,8 @@
     _openAtLoginItem.state = [self isOpenAtLoginEnabled] ? NSControlStateValueOn : NSControlStateValueOff;
 }
 
-- (void)chooseVideoAction:(id)sender {
-    NSOpenPanel *panel = [NSOpenPanel openPanel];
-    panel.canChooseFiles = YES;
-    panel.canChooseDirectories = NO;
-    panel.allowsMultipleSelection = NO;
-    panel.allowedContentTypes = @[
-        [UTType typeWithFilenameExtension:@"mp4"],
-        [UTType typeWithFilenameExtension:@"mov"],
-        [UTType typeWithFilenameExtension:@"m4v"],
-        [UTType typeWithFilenameExtension:@"webm"]
-    ];
-    panel.message = @"Select a high-definition looping video for your desktop wallpaper:";
-
-    // Activate app so the modal panel is frontmost
-    [NSApp activateIgnoringOtherApps:YES];
-
-    [panel beginWithCompletionHandler:^(NSModalResponse result) {
-        if (result == NSModalResponseOK && panel.URL) {
-            NSURL *selectedURL = panel.URL;
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [[WallpaperManager sharedManager] setWallpaperVideoURL:selectedURL];
-            });
-        }
-    }];
+- (void)openWallpaperLibraryAction:(id)sender {
+    [[WallpaperLibraryWindowController sharedController] showLibrary];
 }
 
 - (void)togglePlayPauseAction:(id)sender {

@@ -2,6 +2,8 @@
 #import "WallpaperWindow.h"
 #import "WallpaperViewController.h"
 
+extern NSString * const AuraWallpaperDidChangeNotification;
+
 @interface WallpaperManager : NSObject
 
 @property (nonatomic, strong, readonly) NSURL *currentVideoURL;
@@ -21,5 +23,10 @@
 - (void)setVolume:(float)volume;
 - (void)setHideDesktopIcons:(BOOL)hide;
 - (void)rebuildWindows;
+
++ (NSURL *)userWallpapersDirectory;
++ (NSArray<NSURL *> *)allAvailableWallpapers;
++ (NSURL *)importWallpaperAtURL:(NSURL *)sourceURL error:(NSError **)outError;
++ (BOOL)deleteUserWallpaperAtURL:(NSURL *)wallpaperURL error:(NSError **)outError;
 
 @end
