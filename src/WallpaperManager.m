@@ -98,7 +98,28 @@ static NSString * const kSavedHideIconsKey = @"AuraWallpaperHideIcons";
     [[NSUserDefaults standardUserDefaults] setObject:url.path forKey:kSavedWallpaperPathKey];
     [[NSUserDefaults standardUserDefaults] synchronize];
 
-    [self rebuildWindows];
+    NSArray<NSScreen *> *screens = [NSScreen screens];
+    BOOL canReuse = (_windows.count == screens.count && _windows.count > 0);
+    if (canReuse) {
+        for (WallpaperWindow *window in _windows) {
+            if (!window.targetScreen || ![screens containsObject:window.targetScreen]) {
+                canReuse = NO;
+                break;
+            }
+        }
+    }
+
+    if (canReuse) {
+        for (WallpaperWindow *window in _windows) {
+            WallpaperViewController *vc = (WallpaperViewController *)window.contentViewController;
+            [vc loadVideoURL:_currentVideoURL forScreen:window.targetScreen];
+            if (!_isPlaying || _isSleep) {
+                [vc pause];
+            }
+        }
+    } else {
+        [self rebuildWindows];
+    }
 }
 
 - (void)rebuildWindows {

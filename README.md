@@ -15,6 +15,7 @@ Built after reverse-engineering commercial macOS dynamic wallpaper apps. See [`A
 - **Hardware Accelerated**: Uses native `AVFoundation` (`AVQueuePlayer` + `AVPlayerLooper`) with Apple Silicon hardware video decoding.
 - **Battery & Sleep Aware**: Automatically pauses video playback on screen sleep/lock and resumes on wake.
 - **Hide Desktop Icons Mode**: One-click toggle in the menu bar to elevate the wallpaper above desktop icons for a clean workspace.
+- **Open at Login**: Built-in login item management via macOS `SMAppService` with zero background helpers required.
 - **Audio Control**: Support for video audio with instantaneous mute/unmute toggle.
 - **Zero Black Flash**: Extracts the first frame and synchronizes macOS's static desktop image so switching spaces or unlocking doesn't flash.
 
@@ -47,7 +48,8 @@ Click the `✨` icon in the macOS menu bar to:
 2. **Pause / Resume Wallpaper**: Instantly stop/start video playback.
 3. **Mute / Unmute Audio**: Toggle video sound.
 4. **Hide Desktop Icons**: Toggle between showing and hiding desktop icons.
-5. **Quit Aura Wallpaper**: Clean exit.
+5. **Open at Login**: Toggle whether AuraWallpaper launches automatically upon macOS user login.
+6. **Quit Aura Wallpaper**: Clean exit.
 
 ---
 

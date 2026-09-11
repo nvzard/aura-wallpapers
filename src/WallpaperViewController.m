@@ -31,12 +31,18 @@
         [[NSNotificationCenter defaultCenter] removeObserver:_endObserver];
         _endObserver = nil;
     }
+    if (_playerLooper) {
+        [_playerLooper disableLooping];
+        _playerLooper = nil;
+    }
     if (_player) {
         [_player pause];
+        if (_playerView) {
+            _playerView.player = nil;
+        }
         [_player removeAllItems];
         _player = nil;
     }
-    _playerLooper = nil;
 }
 
 - (void)loadVideoURL:(NSURL *)url forScreen:(NSScreen *)screen {

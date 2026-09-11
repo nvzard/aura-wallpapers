@@ -11,6 +11,7 @@
     if (self) {
         _targetScreen = screen;
         _hidesDesktopIcons = NO;
+        self.releasedWhenClosed = NO;
 
         self.opaque = NO;
         self.backgroundColor = [NSColor clearColor];

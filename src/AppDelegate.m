@@ -1,11 +1,13 @@
 #import "AppDelegate.h"
 #import "WallpaperManager.h"
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+#import <ServiceManagement/ServiceManagement.h>
 
 @interface AppDelegate () {
     NSMenuItem *_playPauseItem;
     NSMenuItem *_muteItem;
     NSMenuItem *_hideIconsItem;
+    NSMenuItem *_openAtLoginItem;
     NSMenuItem *_currentFileItem;
 }
 @end
@@ -65,6 +67,12 @@
     _hideIconsItem.target = self;
     [menu addItem:_hideIconsItem];
 
+    _openAtLoginItem = [[NSMenuItem alloc] initWithTitle:@"Open at Login"
+                                                  action:@selector(toggleOpenAtLoginAction:)
+                                           keyEquivalent:@"l"];
+    _openAtLoginItem.target = self;
+    [menu addItem:_openAtLoginItem];
+
     [menu addItem:[NSMenuItem separatorItem]];
 
     NSMenuItem *quitItem = [[NSMenuItem alloc] initWithTitle:@"Quit Aura Wallpaper"
@@ -89,9 +97,47 @@
     _playPauseItem.title = mgr.isPlaying ? @"Pause Wallpaper" : @"Resume Wallpaper";
     _muteItem.title = mgr.isMuted ? @"Unmute Audio" : @"Mute Audio";
     _hideIconsItem.state = mgr.hidesDesktopIcons ? NSControlStateValueOn : NSControlStateValueOff;
+    _openAtLoginItem.state = [self isOpenAtLoginEnabled] ? NSControlStateValueOn : NSControlStateValueOff;
 }
 
 #pragma mark - Actions
+
+- (BOOL)isOpenAtLoginEnabled {
+    if (@available(macOS 13.0, *)) {
+        return [SMAppService mainAppService].status == SMAppServiceStatusEnabled;
+    }
+    return [[NSUserDefaults standardUserDefaults] boolForKey:@"OpenAtLogin"];
+}
+
+- (void)toggleOpenAtLoginAction:(id)sender {
+    if (@available(macOS 13.0, *)) {
+        SMAppService *service = [SMAppService mainAppService];
+        NSError *error = nil;
+        if (service.status == SMAppServiceStatusEnabled) {
+            BOOL success = [service unregisterAndReturnError:&error];
+            if (!success) {
+                NSLog(@"[AuraWallpaper] Failed to unregister login item: %@", error);
+            }
+        } else {
+            if (service.status == SMAppServiceStatusRequiresApproval) {
+                [SMAppService openSystemSettingsLoginItems];
+            } else {
+                BOOL success = [service registerAndReturnError:&error];
+                if (!success) {
+                    NSLog(@"[AuraWallpaper] Failed to register login item: %@", error);
+                    if (service.status == SMAppServiceStatusRequiresApproval) {
+                        [SMAppService openSystemSettingsLoginItems];
+                    }
+                }
+            }
+        }
+    } else {
+        BOOL current = [[NSUserDefaults standardUserDefaults] boolForKey:@"OpenAtLogin"];
+        [[NSUserDefaults standardUserDefaults] setBool:!current forKey:@"OpenAtLogin"];
+    }
+
+    _openAtLoginItem.state = [self isOpenAtLoginEnabled] ? NSControlStateValueOn : NSControlStateValueOff;
+}
 
 - (void)chooseVideoAction:(id)sender {
     NSOpenPanel *panel = [NSOpenPanel openPanel];
@@ -111,7 +157,10 @@
 
     [panel beginWithCompletionHandler:^(NSModalResponse result) {
         if (result == NSModalResponseOK && panel.URL) {
-            [[WallpaperManager sharedManager] setWallpaperVideoURL:panel.URL];
+            NSURL *selectedURL = panel.URL;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [[WallpaperManager sharedManager] setWallpaperVideoURL:selectedURL];
+            });
         }
     }];
 }

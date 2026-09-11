@@ -11,6 +11,27 @@
 	</dict>
 	<key>files2</key>
 	<dict>
+		<key>MacOS/AuraWallpaper.dSYM/Contents/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			CQFYiW8RG3YmoxoebYX6pLfLbTeuuyYYUwcyGMOPjb0=
+			</data>
+		</dict>
+		<key>MacOS/AuraWallpaper.dSYM/Contents/Resources/DWARF/AuraWallpaper</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			EuiAs7nXciUGEK/GzRRk4s4+4EmqiMXq1BoKs/d+/ow=
+			</data>
+		</dict>
+		<key>MacOS/AuraWallpaper.dSYM/Contents/Resources/Relocations/aarch64/AuraWallpaper.yml</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			M7qO6ZeBl1yJY+PBGgTGzbNJwhhdbQHbFs24szYdwGg=
+			</data>
+		</dict>
 		<key>Resources/default_wallpaper.mp4</key>
 		<dict>
 			<key>hash2</key>

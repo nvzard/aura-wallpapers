@@ -15,6 +15,7 @@ final class WallpaperWindow: NSWindow {
             screen: screen
         )
 
+        self.isReleasedWhenClosed = false
         self.isOpaque = false
         self.backgroundColor = .clear
         self.hasShadow = false

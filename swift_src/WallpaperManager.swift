@@ -67,7 +67,25 @@ final class WallpaperManager {
         self.currentVideoURL = url
         self.isPlaying = true
         UserDefaults.standard.set(url.path, forKey: kSavedPath)
-        rebuildWindows()
+
+        let screens = NSScreen.screens
+        let canReuse = !windows.isEmpty && windows.count == screens.count && windows.allSatisfy { w in
+            guard let s = w.targetScreen else { return false }
+            return screens.contains(s)
+        }
+
+        if canReuse {
+            for window in windows {
+                if let vc = window.contentViewController as? WallpaperViewController, let screen = window.targetScreen {
+                    vc.loadVideo(url: url, for: screen)
+                    if !isPlaying || isSleep {
+                        vc.pause()
+                    }
+                }
+            }
+        } else {
+            rebuildWindows()
+        }
     }
 
     func rebuildWindows() {

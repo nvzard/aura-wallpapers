@@ -33,10 +33,11 @@ FRAMEWORKS=(
     -framework AVKit
     -framework CoreMedia
     -framework UniformTypeIdentifiers
+    -framework ServiceManagement
 )
 
 echo "⚙️ Compiling native binary..."
-clang -fobjc-arc -O3 -Wall \
+clang -fobjc-arc -O3 -g -Wall \
     "${SOURCES[@]}" \
     "${FRAMEWORKS[@]}" \
     -o "$MACOS_DIR/$APP_NAME"
@@ -46,7 +47,7 @@ cp assets/Info.plist "$CONTENTS_DIR/Info.plist"
 
 if [ -f "assets/default_wallpaper.mp4" ]; then
     echo "📦 Bundling default video wallpaper..."
-    cp assets/default_wallpaper.mp4 "$RESOURCES_DIR/default_wallpaper.mp4"
+    cp -c assets/default_wallpaper.mp4 "$RESOURCES_DIR/default_wallpaper.mp4" 2>/dev/null || cp assets/default_wallpaper.mp4 "$RESOURCES_DIR/default_wallpaper.mp4"
 fi
 
 # 4. Ad-hoc codesign

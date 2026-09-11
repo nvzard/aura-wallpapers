@@ -29,10 +29,14 @@ final class WallpaperViewController: NSViewController {
             NotificationCenter.default.removeObserver(obs)
             endObserver = nil
         }
-        player?.pause()
-        player?.removeAllItems()
-        player = nil
+        playerLooper?.disableLooping()
         playerLooper = nil
+        if let p = player {
+            p.pause()
+            playerView.player = nil
+            p.removeAllItems()
+            player = nil
+        }
     }
 
     func loadVideo(url: URL, for screen: NSScreen?) {

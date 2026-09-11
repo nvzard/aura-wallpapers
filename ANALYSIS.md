@@ -197,6 +197,7 @@ A complete, free alternative requires zero paid libraries and zero external depe
    - Play / Pause toggle.
    - Mute / Audio volume slider.
    - "Hide Desktop Icons" toggle.
+   - "Open at Login" toggle (macOS `SMAppService`).
    - Quit.
 
 ---

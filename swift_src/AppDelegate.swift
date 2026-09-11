@@ -1,11 +1,13 @@
 import Cocoa
 import UniformTypeIdentifiers
+import ServiceManagement
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
     private var playPauseItem: NSMenuItem!
     private var muteItem: NSMenuItem!
     private var hideIconsItem: NSMenuItem!
+    private var openAtLoginItem: NSMenuItem!
     private var currentFileItem: NSMenuItem!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -47,6 +49,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         hideIconsItem.target = self
         menu.addItem(hideIconsItem)
 
+        openAtLoginItem = NSMenuItem(title: "Open at Login", action: #selector(toggleOpenAtLoginAction), keyEquivalent: "l")
+        openAtLoginItem.target = self
+        menu.addItem(openAtLoginItem)
+
         menu.addItem(NSMenuItem.separator())
 
         let quitItem = NSMenuItem(title: "Quit Aura Wallpaper", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
@@ -66,6 +72,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         playPauseItem.title = mgr.isPlaying ? "Pause Wallpaper" : "Resume Wallpaper"
         muteItem.title = mgr.isMuted ? "Unmute Audio" : "Mute Audio"
         hideIconsItem.state = mgr.hidesDesktopIcons ? .on : .off
+        openAtLoginItem.state = isOpenAtLoginEnabled ? .on : .off
+    }
+
+    private var isOpenAtLoginEnabled: Bool {
+        if #available(macOS 13.0, *) {
+            return SMAppService.mainApp.status == .enabled
+        } else {
+            return UserDefaults.standard.bool(forKey: "OpenAtLogin")
+        }
+    }
+
+    @objc private func toggleOpenAtLoginAction() {
+        if #available(macOS 13.0, *) {
+            let service = SMAppService.mainApp
+            do {
+                if service.status == .enabled {
+                    try service.unregister()
+                } else {
+                    if service.status == .requiresApproval {
+                        SMAppService.openSystemSettingsLoginItems()
+                    } else {
+                        try service.register()
+                    }
+                }
+            } catch {
+                NSLog("[AuraWallpaper] Error toggling Open at Login: \(error)")
+                if service.status == .requiresApproval {
+                    SMAppService.openSystemSettingsLoginItems()
+                }
+            }
+        } else {
+            let current = UserDefaults.standard.bool(forKey: "OpenAtLogin")
+            UserDefaults.standard.set(!current, forKey: "OpenAtLogin")
+        }
+        openAtLoginItem.state = isOpenAtLoginEnabled ? .on : .off
     }
 
     @objc private func chooseVideoAction() {
@@ -79,7 +120,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NSApp.activate(ignoringOtherApps: true)
         panel.begin { response in
             if response == .OK, let url = panel.url {
-                WallpaperManager.shared.setWallpaper(url: url)
+                DispatchQueue.main.async {
+                    WallpaperManager.shared.setWallpaper(url: url)
+                }
             }
         }
     }
