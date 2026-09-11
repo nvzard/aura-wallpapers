@@ -13,6 +13,76 @@ private func PrettifyWallpaperTitle(_ fileName: String) -> String {
 
 // MARK: - WallpaperCardView
 
+final class WallpaperActiveBadgeView: NSView {
+    let iconView = NSImageView()
+    let label = NSTextField(labelWithString: "Active")
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        setup()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+
+    private func setup() {
+        wantsLayer = true
+        layer?.masksToBounds = true
+        layer?.backgroundColor = NSColor(srgbRed: 0.0, green: 0.48, blue: 1.0, alpha: 0.95).cgColor
+        layer?.borderColor = NSColor(white: 1.0, alpha: 0.25).cgColor
+        layer?.borderWidth = 0.5
+
+        let cfg = NSImage.SymbolConfiguration(pointSize: 9.5, weight: .bold)
+        let checkImg = NSImage(systemSymbolName: "checkmark", accessibilityDescription: nil)?.withSymbolConfiguration(cfg)
+        iconView.image = checkImg
+        iconView.contentTintColor = .white
+        addSubview(iconView)
+
+        label.font = .systemFont(ofSize: 11.0, weight: .bold)
+        label.textColor = .white
+        label.alignment = .left
+        addSubview(label)
+    }
+
+    override var isFlipped: Bool { true }
+
+    override var fittingSize: NSSize {
+        let hasIcon = iconView.image != nil
+        let padLeft: CGFloat = hasIcon ? 8.0 : 10.0
+        let iconW: CGFloat = hasIcon ? 11.0 : 0.0
+        let gap: CGFloat = hasIcon ? 4.0 : 0.0
+        let textSize = label.fittingSize
+        let padRight: CGFloat = hasIcon ? 9.0 : 10.0
+        return NSSize(width: ceil(padLeft + iconW + gap + textSize.width + padRight), height: 22.0)
+    }
+
+    override func layout() {
+        super.layout()
+        layer?.cornerRadius = bounds.height / 2.0
+
+        let hasIcon = iconView.image != nil
+        let padLeft: CGFloat = hasIcon ? 8.0 : 10.0
+        let iconW: CGFloat = hasIcon ? 11.0 : 0.0
+        let iconH: CGFloat = hasIcon ? 10.0 : 0.0
+        let gap: CGFloat = hasIcon ? 4.0 : 0.0
+
+        if hasIcon {
+            let iconY = round((bounds.height - iconH) / 2.0)
+            iconView.frame = NSRect(x: padLeft, y: iconY, width: iconW, height: iconH)
+            iconView.isHidden = false
+        } else {
+            iconView.isHidden = true
+        }
+
+        let textSize = label.fittingSize
+        let labelX = padLeft + iconW + gap
+        let labelY = round((bounds.height - textSize.height) / 2.0)
+        label.frame = NSRect(x: labelX, y: labelY, width: textSize.width, height: textSize.height)
+    }
+}
+
 final class WallpaperCardView: NSView {
     let wallpaperURL: URL
     private(set) var isActive: Bool
@@ -23,8 +93,7 @@ final class WallpaperCardView: NSView {
 
     private let thumbnailView = NSImageView()
     private let titleLabel = NSTextField(labelWithString: "")
-    private let badgeBackground = NSView()
-    private let badgeLabel = NSTextField(labelWithString: "✓ ACTIVE")
+    let activeBadgeView = WallpaperActiveBadgeView()
     private var deleteButton: NSButton?
     private var trackingAreaRef: NSTrackingArea?
     private var isHovered = false
@@ -66,16 +135,8 @@ final class WallpaperCardView: NSView {
         addSubview(titleLabel)
 
         // Badge
-        badgeBackground.wantsLayer = true
-        badgeBackground.layer?.cornerRadius = 4.0
-        badgeBackground.layer?.backgroundColor = NSColor(srgbRed: 0.18, green: 0.62, blue: 0.95, alpha: 0.95).cgColor
-        addSubview(badgeBackground)
-
-        badgeLabel.font = .systemFont(ofSize: 10.0, weight: .bold)
-        badgeLabel.textColor = .white
-        badgeLabel.alignment = .center
-        badgeBackground.addSubview(badgeLabel)
-        badgeBackground.isHidden = !isActive
+        addSubview(activeBadgeView)
+        activeBadgeView.isHidden = !isActive
 
         // Delete button
         if isUserWallpaper {
@@ -130,7 +191,7 @@ final class WallpaperCardView: NSView {
 
     func updateActiveState(_ active: Bool) {
         isActive = active
-        badgeBackground.isHidden = !active
+        activeBadgeView.isHidden = !active
         updateBorders()
     }
 
@@ -163,13 +224,11 @@ final class WallpaperCardView: NSView {
         let labelY = thumbMargin + thumbHeight + 6.0
         titleLabel.frame = NSRect(x: thumbMargin + 4.0, y: labelY, width: thumbWidth - 8.0, height: 20.0)
 
-        let badgeW: CGFloat = 68.0
-        let badgeH: CGFloat = 20.0
-        badgeBackground.frame = NSRect(x: thumbnailView.frame.maxX - badgeW - 6.0,
+        let badgeSize = activeBadgeView.fittingSize
+        activeBadgeView.frame = NSRect(x: thumbnailView.frame.maxX - badgeSize.width - 6.0,
                                        y: thumbnailView.frame.minY + 6.0,
-                                       width: badgeW,
-                                       height: badgeH)
-        badgeLabel.frame = badgeBackground.bounds
+                                       width: badgeSize.width,
+                                       height: badgeSize.height)
 
         if let del = deleteButton {
             let delSize: CGFloat = 22.0

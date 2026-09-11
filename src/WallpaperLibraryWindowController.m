@@ -18,30 +18,83 @@ static NSString *PrettifyWallpaperTitle(NSString *fileName) {
 
 #pragma mark - WallpaperCardView
 
-@interface WallpaperCardView : NSView {
+@implementation WallpaperActiveBadgeView
+
+- (instancetype)initWithFrame:(NSRect)frameRect {
+    self = [super initWithFrame:frameRect];
+    if (self) {
+        self.wantsLayer = YES;
+        self.layer.masksToBounds = YES;
+        self.layer.backgroundColor = [NSColor colorWithSRGBRed:0.0 green:0.48 blue:1.0 alpha:0.95].CGColor;
+        self.layer.borderColor = [NSColor colorWithWhite:1.0 alpha:0.25].CGColor;
+        self.layer.borderWidth = 0.5;
+
+        _iconView = [[NSImageView alloc] initWithFrame:NSZeroRect];
+        NSImageSymbolConfiguration *cfg = [NSImageSymbolConfiguration configurationWithPointSize:9.5 weight:NSFontWeightBold];
+        NSImage *checkImg = [[NSImage imageWithSystemSymbolName:@"checkmark" accessibilityDescription:nil] imageWithSymbolConfiguration:cfg];
+        _iconView.image = checkImg;
+        _iconView.contentTintColor = [NSColor whiteColor];
+        [self addSubview:_iconView];
+
+        _label = [NSTextField labelWithString:@"Active"];
+        _label.font = [NSFont systemFontOfSize:11.0 weight:NSFontWeightBold];
+        _label.textColor = [NSColor whiteColor];
+        _label.alignment = NSTextAlignmentLeft;
+        [self addSubview:_label];
+    }
+    return self;
+}
+
+- (BOOL)isFlipped {
+    return YES;
+}
+
+- (NSSize)fittingSize {
+    BOOL hasIcon = (_iconView.image != nil);
+    CGFloat padLeft = hasIcon ? 8.0 : 10.0;
+    CGFloat iconW = hasIcon ? 11.0 : 0.0;
+    CGFloat gap = hasIcon ? 4.0 : 0.0;
+    NSSize textSize = [_label fittingSize];
+    CGFloat padRight = hasIcon ? 9.0 : 10.0;
+    return NSMakeSize(ceil(padLeft + iconW + gap + textSize.width + padRight), 22.0);
+}
+
+- (void)layout {
+    [super layout];
+    self.layer.cornerRadius = self.bounds.size.height / 2.0;
+
+    BOOL hasIcon = (_iconView.image != nil);
+    CGFloat padLeft = hasIcon ? 8.0 : 10.0;
+    CGFloat iconW = hasIcon ? 11.0 : 0.0;
+    CGFloat iconH = hasIcon ? 10.0 : 0.0;
+    CGFloat gap = hasIcon ? 4.0 : 0.0;
+
+    if (hasIcon) {
+        CGFloat iconY = round((self.bounds.size.height - iconH) / 2.0);
+        _iconView.frame = NSMakeRect(padLeft, iconY, iconW, iconH);
+        _iconView.hidden = NO;
+    } else {
+        _iconView.hidden = YES;
+    }
+
+    NSSize textSize = [_label fittingSize];
+    CGFloat labelX = padLeft + iconW + gap;
+    CGFloat labelY = round((self.bounds.size.height - textSize.height) / 2.0);
+    _label.frame = NSMakeRect(labelX, labelY, textSize.width, textSize.height);
+}
+
+@end
+
+@implementation WallpaperCardView {
     NSImageView *_thumbnailView;
     NSTextField *_titleLabel;
-    NSView *_badgeBackground;
-    NSTextField *_badgeLabel;
+    WallpaperActiveBadgeView *_activeBadgeView;
     NSButton *_deleteButton;
     NSTrackingArea *_trackingArea;
     BOOL _isHovered;
 }
 
-@property (nonatomic, strong) NSURL *wallpaperURL;
-@property (nonatomic, assign) BOOL isActive;
-@property (nonatomic, assign) BOOL isUserWallpaper;
-@property (nonatomic, copy) void (^onSelect)(NSURL *url);
-@property (nonatomic, copy) void (^onDelete)(NSURL *url);
-
-- (instancetype)initWithWallpaperURL:(NSURL *)url
-                            isActive:(BOOL)isActive
-                     isUserWallpaper:(BOOL)isUserWallpaper;
-- (void)updateActiveState:(BOOL)isActive;
-
-@end
-
-@implementation WallpaperCardView
+@synthesize activeBadgeView = _activeBadgeView;
 
 - (instancetype)initWithWallpaperURL:(NSURL *)url
                             isActive:(BOOL)isActive
@@ -82,18 +135,9 @@ static NSString *PrettifyWallpaperTitle(NSString *fileName) {
     [self addSubview:_titleLabel];
 
     // 3. Active Badge View
-    _badgeBackground = [[NSView alloc] initWithFrame:NSZeroRect];
-    _badgeBackground.wantsLayer = YES;
-    _badgeBackground.layer.cornerRadius = 4.0;
-    _badgeBackground.layer.backgroundColor = [NSColor colorWithSRGBRed:0.18 green:0.62 blue:0.95 alpha:0.95].CGColor;
-    [self addSubview:_badgeBackground];
-
-    _badgeLabel = [NSTextField labelWithString:@"✓ ACTIVE"];
-    _badgeLabel.font = [NSFont systemFontOfSize:10.0 weight:NSFontWeightBold];
-    _badgeLabel.textColor = [NSColor whiteColor];
-    _badgeLabel.alignment = NSTextAlignmentCenter;
-    [_badgeBackground addSubview:_badgeLabel];
-    _badgeBackground.hidden = !_isActive;
+    _activeBadgeView = [[WallpaperActiveBadgeView alloc] initWithFrame:NSZeroRect];
+    _activeBadgeView.hidden = !_isActive;
+    [self addSubview:_activeBadgeView];
 
     // 4. Delete button for custom user wallpapers
     if (_isUserWallpaper) {
@@ -151,7 +195,7 @@ static NSString *PrettifyWallpaperTitle(NSString *fileName) {
 
 - (void)updateActiveState:(BOOL)isActive {
     _isActive = isActive;
-    _badgeBackground.hidden = !isActive;
+    _activeBadgeView.hidden = !isActive;
     [self updateBorders];
 }
 
@@ -188,13 +232,11 @@ static NSString *PrettifyWallpaperTitle(NSString *fileName) {
     _titleLabel.frame = NSMakeRect(thumbMargin + 4.0, labelY, thumbWidth - 8.0, 20.0);
 
     // Active badge at top right corner of thumbnail
-    CGFloat badgeW = 68.0;
-    CGFloat badgeH = 20.0;
-    _badgeBackground.frame = NSMakeRect(NSMaxX(_thumbnailView.frame) - badgeW - 6.0,
+    NSSize badgeSize = [_activeBadgeView fittingSize];
+    _activeBadgeView.frame = NSMakeRect(NSMaxX(_thumbnailView.frame) - badgeSize.width - 6.0,
                                         NSMinY(_thumbnailView.frame) + 6.0,
-                                        badgeW,
-                                        badgeH);
-    _badgeLabel.frame = _badgeBackground.bounds;
+                                        badgeSize.width,
+                                        badgeSize.height);
 
     // Delete button at top left corner of thumbnail
     if (_deleteButton) {
